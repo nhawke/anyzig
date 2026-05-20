@@ -365,9 +365,6 @@ pub fn main() !void {
         break :blk options;
     };
 
-    // Resolve configured ad-hoc version
-    const ad_hoc_version: ?VersionSpecifier = readAdHocVersionFile();
-
     const version_specifier: VersionSpecifier, const is_init = blk: {
         if (maybe_command) |command| {
             if (std.mem.startsWith(u8, command, "-") and !std.mem.eql(u8, command, "-h") and !std.mem.eql(u8, command, "--help")) {
@@ -389,7 +386,7 @@ pub fn main() !void {
 
                 // manual version gets priority over ad hoc version
                 if (manual_version) |version| break :blk .{ version, !is_help };
-                if (ad_hoc_version) |version| break :blk .{ version, !is_help };
+                if (readAdHocVersionFile()) |version| break :blk .{ version, !is_help };
                 try std.io.getStdErr().writer().print(
                     "error: anyzig init requires a version, you can:\n" ++
                         "  1. run 'zig 0.13.0 {s}'\n" ++
@@ -411,7 +408,7 @@ pub fn main() !void {
         }
 
         //   3. fall back to ad hoc version when outside a project
-        if (ad_hoc_version) |version| break :blk .{ version, false };
+        if (readAdHocVersionFile()) |version| break :blk .{ version, false };
 
         try std.io.getStdErr().writeAll(
             "no build.zig to pull a zig version from, you can:\n" ++
